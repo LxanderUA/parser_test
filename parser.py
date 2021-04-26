@@ -91,49 +91,59 @@ class Parser:
         return self._parse(self.__code)
 
     def _parse(self, code):
-        return self._solve(code)
-
-    def _solve(self, code):
         digits = Stack()
         operation = Stack()
-        prevdig = ''
+        digit = ''
         priority = 0
         for char in code:
             if char.isdigit():
-                prevdig += char
+                digit += char
                 continue
-            elif not prevdig == '':
-                digits.push(int(prevdig))
-                prevdig = ''
+            elif digit != '':
+                digits.push(int(digit))
+                digit = ''
             if char == Operators.PARENTHESIS_LEFT.sign:
                 priority += 10
             elif char == Operators.PARENTHESIS_RIGHT.sign:
-                self._solvehigh(digits, operation, priority)
+                self._solve(digits, operation, priority)
                 priority -= 10
             elif Operators.is_math_operator(char):
                 if len(operation) > 0 and priority + Operators.get_priority(char) < operation.peek()[1]:
-                    self._solvehigh(digits, operation, priority + Operators.get_priority(char))
+                    self._solve(digits, operation, priority + Operators.get_priority(char))
                 operation.push((char, priority + Operators.get_priority(char)))
         return digits.pop()
 
 
-    def _solvehigh(self, digits, operation, priority):
+    def _solve(self, digits, operation, priority):
         while len(operation) > 0 and operation.peek()[1] > priority:
             operator = operation.pop()
             elem2 = digits.pop()
             elem1 = digits.pop()
-            if operator[0] == Operators.PLUS.sign:
-                elem1 += elem2
-            elif operator[0] == Operators.MINUS.sign:
-                elem1 -= elem2
-            elif operator[0] == Operators.ASTERISK.sign:
-                elem1 *= elem2
-            elif operator[0] == Operators.SLASH.sign:
-                elem1 //= elem2
-            elif operator[0] == Operators.POWER.sign:
-                elem1 **= elem2
+            operation_tmp = Stack()
+            digits_tmp = Stack()
+            while len(operation) > 0 and operation.peek()[1] == operator[1]:
+                operation_tmp.push(operator)
+                digits_tmp.push(elem2)
+                operator = operation.pop()
+                elem2 = elem1
+                elem1 = digits.pop()
+            while len(operation_tmp) >= 0:
+                if operator[0] == Operators.PLUS.sign:
+                    elem1 += elem2
+                elif operator[0] == Operators.MINUS.sign:
+                    elem1 -= elem2
+                elif operator[0] == Operators.ASTERISK.sign:
+                    elem1 *= elem2
+                elif operator[0] == Operators.SLASH.sign:
+                    elem1 //= elem2
+                elif operator[0] == Operators.POWER.sign:
+                    elem1 **= elem2
+                if len(operation_tmp) == 0:
+                    break
+                elem2 = digits_tmp.pop()
+                operator = operation_tmp.pop()
             digits.push(elem1)
 
 
-my = Parser('1+2*(2+10)/(5-2^2)')
+my = Parser('1+2*(2+10)/(5-2^2)-12+3^2*2')
 print(my.execute())
