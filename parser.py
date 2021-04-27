@@ -95,16 +95,17 @@ class Parser:
         operation = Stack()
         digit = ''
         priority = 0
-        for char in code:
+        code_rev = code[::-1]
+        for char in code_rev:
             if char.isdigit():
-                digit += char
+                digit = char + digit
                 continue
             elif digit != '':
                 digits.push(int(digit))
                 digit = ''
-            if char == Operators.PARENTHESIS_LEFT.sign:
+            if char == Operators.PARENTHESIS_RIGHT.sign:
                 priority += 10
-            elif char == Operators.PARENTHESIS_RIGHT.sign:
+            elif char == Operators.PARENTHESIS_LEFT.sign:
                 self._solve(digits, operation, priority)
                 priority -= 10
             elif Operators.is_math_operator(char):
@@ -117,33 +118,20 @@ class Parser:
     def _solve(self, digits, operation, priority):
         while len(operation) > 0 and operation.peek()[1] > priority:
             operator = operation.pop()
-            elem2 = digits.pop()
             elem1 = digits.pop()
-            operation_tmp = Stack()
-            digits_tmp = Stack()
-            while len(operation) > 0 and operation.peek()[1] == operator[1]:
-                operation_tmp.push(operator)
-                digits_tmp.push(elem2)
-                operator = operation.pop()
-                elem2 = elem1
-                elem1 = digits.pop()
-            while len(operation_tmp) >= 0:
-                if operator[0] == Operators.PLUS.sign:
-                    elem1 += elem2
-                elif operator[0] == Operators.MINUS.sign:
-                    elem1 -= elem2
-                elif operator[0] == Operators.ASTERISK.sign:
-                    elem1 *= elem2
-                elif operator[0] == Operators.SLASH.sign:
-                    elem1 //= elem2
-                elif operator[0] == Operators.POWER.sign:
-                    elem1 **= elem2
-                if len(operation_tmp) == 0:
-                    break
-                elem2 = digits_tmp.pop()
-                operator = operation_tmp.pop()
+            elem2 = digits.pop()
+            if operator[0] == Operators.PLUS.sign:
+                elem1 += elem2
+            elif operator[0] == Operators.MINUS.sign:
+                elem1 -= elem2
+            elif operator[0] == Operators.ASTERISK.sign:
+                elem1 *= elem2
+            elif operator[0] == Operators.SLASH.sign:
+                elem1 //= elem2
+            elif operator[0] == Operators.POWER.sign:
+                elem1 **= elem2
             digits.push(elem1)
 
 
-my = Parser('1+2*(2+10)/(5-2^2)-12+3^2*2')
+my = Parser('5*8/2^2/2-1+2-3+4-(5+6)-7+8')
 print(my.execute())
